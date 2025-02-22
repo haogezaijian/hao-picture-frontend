@@ -2,7 +2,7 @@
   <div id="spaceDetailPage">
     <!-- 空间信息 -->
     <a-flex justify="space-between">
-      <h2>{{space.spaceName}}(私有空间)</h2>
+      <h2>{{ space.spaceName }}(私有空间)</h2>
       <a-space size="middle">
         <a-button type="primary" :href="`/add_picture?spaceId=${id}`" target="_blank">
           + 创建图片
@@ -11,11 +11,14 @@
           <a-progress
             type="circle"
             :percent="((space.totalSize*100 / space.maxSize).toFixed(1))"
-            :size="42" />
+            :size="42"/>
         </a-tooltip>
       </a-space>
     </a-flex>
-    <div style="margin-bottom: 16px"></div>
+    <div style="margin-bottom: 16px;"></div>
+    <!-- 搜索表单 -->
+    <PictureSearchForm :onSearch="onSearch"/>
+    <div style="margin-bottom: 16px;"></div>
     <!-- 图片列表 -->
     <PictureList :dataList="dataList" :loading="loading" :showOp="true" :onReload="fetchData"/>
     <!-- 分页 -->
@@ -31,11 +34,12 @@
 
 <script setup lang="ts">
 import {onMounted, reactive, ref} from 'vue'
-import { getSpaceVoByIdUsingGet } from '@/api/spaceController.ts'
-import { message } from 'ant-design-vue'
+import {getSpaceVoByIdUsingGet} from '@/api/spaceController.ts'
+import {message} from 'ant-design-vue'
 import {listPictureVoByPageUsingPost} from "@/api/pictureController.ts";
 import {formatSize} from "@/utils";
 import PictureList from "@/components/PictureList.vue";
+import PictureSearchForm from "@/components/PictureSearchForm.vue";
 
 interface Props {
   id: string | number
@@ -43,7 +47,6 @@ interface Props {
 
 const props = defineProps<Props>()
 const space = ref<API.SpaceVO>({})
-
 
 
 // 获取空间详情
@@ -74,7 +77,7 @@ const total = ref(0)
 const loading = ref(true)
 
 // 搜索条件
-const searchParams = reactive<API.PictureQueryRequest>({
+const searchParams = ref<API.PictureQueryRequest>({
   current: 1,
   pageSize: 12,
   sortField: 'createTime',
@@ -87,7 +90,7 @@ const fetchData = async () => {
   // 转换搜索参数
   const params = {
     spaceId: props.id,
-    ...searchParams,
+    ...searchParams.value,
   }
   const res = await listPictureVoByPageUsingPost(params)
   if (res.data.code === 0 && res.data.data) {
@@ -105,8 +108,17 @@ onMounted(() => {
 })
 
 const onPageChange = (page: number, pageSize: number) => {
-  searchParams.current = page
-  searchParams.pageSize = pageSize
+  searchParams.value.current = page
+  searchParams.value.pageSize = pageSize
+  fetchData()
+}
+
+const onSearch = (newSearchParams: API.PictureQueryRequest) => {
+  searchParams.value = {
+    ...searchParams.value,
+    ...newSearchParams,
+    current: 1,
+  }
   fetchData()
 }
 
