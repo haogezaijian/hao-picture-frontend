@@ -4,7 +4,7 @@
       <!-- 图片预览 -->
       <a-col :sm="24" :md="16" :xl="18">
         <a-card title="图片预览">
-          <a-image :src="picture.url" style="max-height: 600px; object-fit: contain" />
+          <a-image :src="picture.url" style="max-height: 600px; object-fit: contain"/>
         </a-card>
       </a-col>
       <!-- 图片信息区域 -->
@@ -13,7 +13,7 @@
           <a-descriptions :column="1">
             <a-descriptions-item label="作者">
               <a-space>
-                <a-avatar :size="24" :src="picture.user?.userAvatar" />
+                <a-avatar :size="24" :src="picture.user?.userAvatar"/>
                 <div>{{ picture.user?.userName }}</div>
               </a-space>
             </a-descriptions-item>
@@ -46,14 +46,27 @@
             <a-descriptions-item label="大小">
               {{ formatSize(picture.picSize) }}
             </a-descriptions-item>
+            <a-descriptions-item label="主色调">
+              <a-space>
+                {{ picture.picColor ?? '-' }}
+                <div v-if="picture.picColor" :style="{
+                  backgroundColor: toHexColor(picture.picColor),
+                  width: '16px',
+                  height: '16px',
+                }"/>
+              </a-space>
+            </a-descriptions-item>
           </a-descriptions>
           <!-- 图片操作 -->
           <a-space wrap>
             <a-button type="primary" @click="doDownload">
               免费下载
               <template #icon>
-                <DownloadOutlined />
+                <DownloadOutlined/>
               </template>
+            </a-button>
+            <a-button :icon="h(ShareAltOutlined)" type="primary" ghost  @click="doShare">
+              分享
             </a-button>
             <a-button v-if="canEdit" :icon="h(EditOutlined)" type="default" @click="doEdit">
               编辑
@@ -65,17 +78,19 @@
         </a-card>
       </a-col>
     </a-row>
+    <ShareModal ref="shareModalRef" :link="shareLink"/>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, h, onMounted, ref } from 'vue'
-import { deletePictureUsingPost, getPictureVoByIdUsingGet } from '@/api/pictureController.ts'
-import { message } from 'ant-design-vue'
-import { DeleteOutlined, DownloadOutlined, EditOutlined } from '@ant-design/icons-vue'
-import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
-import { useRouter } from 'vue-router'
-import { downloadImage, formatSize } from '@/utils'
+import {computed, h, onMounted, ref} from 'vue'
+import {deletePictureUsingPost, getPictureVoByIdUsingGet} from '@/api/pictureController.ts'
+import {message} from 'ant-design-vue'
+import {DeleteOutlined, DownloadOutlined, EditOutlined, ShareAltOutlined} from '@ant-design/icons-vue'
+import {useLoginUserStore} from '@/stores/useLoginUserStore.ts'
+import {useRouter} from 'vue-router'
+import {downloadImage, formatSize, toHexColor} from '@/utils'
+import ShareModal from "@/components/ShareModal.vue";
 
 interface Props {
   id: string | number
@@ -138,7 +153,7 @@ const doDelete = async () => {
   if (!id) {
     return
   }
-  const res = await deletePictureUsingPost({ id })
+  const res = await deletePictureUsingPost({id})
   if (res.data.code === 0) {
     message.success('删除成功')
   } else {
@@ -149,6 +164,17 @@ const doDelete = async () => {
 // 下载图片
 const doDownload = () => {
   downloadImage(picture.value.url)
+}
+
+//分享
+const shareModalRef = ref()
+
+const shareLink = ref<String>()
+const doShare = (picture, e) => {
+  shareLink.value = `${window.location.protocol}//${window.location.host}/picture/${picture.id}}`
+  if (shareModalRef.value) {
+    shareModalRef.value.openModal();
+  }
 }
 </script>
 
