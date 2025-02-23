@@ -34,6 +34,10 @@
                 <EditOutlined/>
                 编辑
               </a-space>
+              <a-space @click="e => doSearch(picture,e)">
+                <SearchOutlined/>
+                搜索
+              </a-space>
               <a-space @click="e => doDelete(picture,e)">
                 <DeleteOutlined/>
                 删除
@@ -48,7 +52,7 @@
 
 <script setup lang="ts">
 import {useRouter} from 'vue-router' // 定义数据
-import {DeleteOutlined, EditOutlined} from "@ant-design/icons-vue";
+import {DeleteOutlined, EditOutlined,SearchOutlined} from "@ant-design/icons-vue";
 import * as path from "path";
 import {deletePictureUsingPost} from "@/api/pictureController.ts";
 import {message} from "ant-design-vue";
@@ -85,6 +89,12 @@ const doEdit = (picture, e) => {
     }
   })
 };
+
+const doSearch = (picture, e) => {
+  // 阻止事件冒泡
+  e.stopPropagation()
+  window.open(`/search_picture?pictureId=${picture.id}`)
+}
 
 // 删除数据
 const doDelete = async (picture, e) => {
